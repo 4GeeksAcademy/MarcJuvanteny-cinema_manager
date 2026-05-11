@@ -3,8 +3,7 @@ type CinemaSala = SeatState[][];
 type Seat = { row: number; col: number };
 type BookingResult = { success: boolean; message: string; updatedSala: CinemaSala };
 type Stats = { total: number; occupied: number; available: number };
-
-declare const process: { argv: string[] };
+type TestSuiteOptions = { label: string; rows: number; cols: number; seat: Seat };
 
 const FREE: SeatState = 0;
 const TAKEN: SeatState = 1;
@@ -78,22 +77,13 @@ function findContiguousSeats(sala: CinemaSala): [Seat, Seat] | null {
   return null;
 }
 
-function parseSeatArg(args: string[]): Seat | null {
-  if (!args.length) return null;
-  const raw = args[0].includes(",") ? args[0].split(",") : args.slice(0, 2);
-  if (raw.length < 2) return null;
-  const row = Number.parseInt(raw[0], 10);
-  const col = Number.parseInt(raw[1], 10);
-  return Number.isNaN(row) || Number.isNaN(col) ? null : { row, col };
-}
-
-function runTestSuite(): void {
-  console.log("=== Suite de Pruebas ===");
-  let sala = randomHalfFull(initializeSala(8, 10));
-  console.log("\n1) Sala 8x10 semillena aleatoria");
+function runTestSuite(options: TestSuiteOptions): void {
+  console.log(`=== Suite de Pruebas: ${options.label} ===`);
+  let sala = randomHalfFull(initializeSala(options.rows, options.cols));
+  console.log(`\n1) Sala ${options.rows}x${options.cols} semillena aleatoria`);
   renderSala(sala);
 
-  const seat = parseSeatArg(process.argv.slice(2)) ?? { row: 2, col: 3 };
+  const seat = options.seat;
   console.log(`\n2) Reserva intentada (${seat.row}, ${seat.col})`);
   let result = bookSeat(sala, seat.row, seat.col);
   console.log(result.message);
@@ -112,6 +102,14 @@ function runTestSuite(): void {
   console.log(getStatistics(sala));
 }
 
-runTestSuite();
+const scenarios: TestSuiteOptions[] = [
+  { label: "Escenario A", rows: 8, cols: 10, seat: { row: 2, col: 3 } },
+  { label: "Escenario B", rows: 8, cols: 10, seat: { row: 0, col: 0 } },
+  { label: "Escenario C", rows: 6, cols: 12, seat: { row: 5, col: 11 } },
+];
+
+for (let i = 0; i < scenarios.length; i += 1) {
+  runTestSuite(scenarios[i]);
+}
 
 export { initializeSala, renderSala, bookSeat, getStatistics, findContiguousSeats };
